@@ -1,6 +1,3 @@
-# PROJETO-3
-
-Claro, posso ajudar com a documentação do seu projeto de análise de dados. Vamos organizar a documentação de forma clara e completa. Aqui está um esboço da estrutura que você pode seguir:
 
 ### Documentação do Projeto 3
 

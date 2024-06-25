@@ -5,7 +5,7 @@
 
 #### 1. **Introdução**
 
-Este projeto tem como objetivo a análise de dados financeiros para identificar padrões e insights valiosos que possam auxiliar na tomada de decisões de crédito. Os dados foram obtidos de várias fontes e tratados para criar uma base consolidada e limpa.
+Este projeto tem como objetivo a análise de dados financeiros para identificar padrões e insights valiosos que possam auxiliar na tomada de decisões de crédito. Os dados são fictícios e foram obtidos a fim de compreender o padrão de inadimplência de tais clientes.
 
 #### 2. **Descrição dos Dados**
 
@@ -101,6 +101,71 @@ Após o tratamento dos dados, realizamos várias análises para identificar padr
 - **Análise de Inadimplência:** Verificamos a proporção de clientes inadimplentes e não inadimplentes.
 - **Análise de Atrasos de Pagamento:** Identificamos os diferentes níveis de atraso de pagamento (30-59 dias, 60-89 dias, mais de 90 dias).
 - **Análise de Perfil de Cliente:** Analisamos o perfil dos clientes com base em idade, sexo, número de dependentes e salário do último mês.
+- **Análise de Faixa Etária e Presença de Dependentes:** Identificamos clientes em diferentes faixas etárias e com diferentes números de dependentes e analisamos seu comportamento financeiro.
+
+##### 4.1 **Análise de Faixa Etária e Presença de Dependentes**
+
+Para identificar e classificar os clientes em diferentes grupos de faixa etária e presença de dependentes, utilizamos os quartis da variável idade e a presença de dependentes, conforme os seguintes critérios:
+
+- **Idoso sem Filhos:** Idade no quartil 4, sem filhos (idade >= percentil 75, dependentes = 0)
+- **Idoso com Filhos:** Idade no quartil 4, com filhos (idade >= percentil 75, dependentes >= 1)
+- **Senhor sem Filhos:** Idade no quartil 3, sem filhos (percentil 50 <= idade < percentil 75, dependentes = 0)
+- **Senhor com Filhos:** Idade no quartil 3, com filhos (percentil 50 <= idade < percentil 75, dependentes >= 1)
+- **Adulto sem Filhos:** Idade no quartil 2, sem filhos (percentil 25 <= idade < percentil 50, dependentes = 0)
+- **Adulto com Filhos:** Idade no quartil 2, com filhos (percentil 25 <= idade < percentil 50, dependentes >= 1)
+- **Jovem sem Filhos:** Idade no quartil 1, sem filhos (idade < percentil 25, dependentes = 0)
+- **Jovem com Filhos:** Idade no quartil 1, com filhos (idade < percentil 25, dependentes >= 1)
+
+Para calcular os quartis e classificar os clientes, utilizamos o seguinte comando SQL:
+
+```sql
+WITH quartis AS (
+    SELECT
+        user_id,
+        age,
+        number_dependents,
+        last_month_salary,
+        default_flag,
+        NTILE(4) OVER (ORDER BY age) AS quartil_idade
+    FROM 
+        `projeto-3-423920.projeto3.combined_data`
+),
+classificacao AS (
+    SELECT
+        user_id,
+        age,
+        number_dependents,
+        last_month_salary,
+        default_flag,
+        quartil_idade,
+        CASE
+            WHEN quartil_idade = 4 AND number_dependents = 0 THEN 'Idoso sem Filhos'
+            WHEN quartil_idade = 4 AND number_dependents >= 1 THEN 'Idoso com Filhos'
+            WHEN quartil_idade = 3 AND number_dependents = 0 THEN 'Senhor sem Filhos'
+            WHEN quartil_idade = 3 AND number_dependents >= 1 THEN 'Senhor com Filhos'
+            WHEN quartil_idade = 2 AND number_dependents = 0 THEN 'Adulto sem Filhos'
+            WHEN quartil_idade = 2 AND number_dependents >= 1 THEN 'Adulto com Filhos'
+            WHEN quartil_idade = 1 AND number_dependents = 0 THEN 'Jovem sem Filhos'
+            WHEN quartil_idade = 1 AND number_dependents >= 1 THEN 'Jovem com Filhos'
+            ELSE 'Outra Categoria'
+        END AS classificacao_cliente
+    FROM 
+        quartis
+)
+SELECT 
+    classificacao_cliente,
+    COUNT(user_id) AS total_usuarios,
+    AVG(last_month_salary) AS salario_medio,
+    SUM(CASE WHEN default_flag = 'inadimplentes' THEN 1 ELSE 0 END) AS total_inadimplentes
+FROM 
+    classificacao
+GROUP BY 
+    classificacao_cliente
+ORDER BY 
+    classificacao_cliente;
+```
+
+Esta análise nos permitiu segmentar os clientes em grupos específicos e entender melhor o comportamento financeiro de cada grupo.
 
 #### 5. **Visualização dos Dados**
 
@@ -110,4 +175,4 @@ Para facilitar a compreensão dos dados, utilizamos o Looker Studio para criar v
 
 Este projeto demonstrou a importância do tratamento de dados e da combinação de várias fontes para gerar insights valiosos. Com uma base de dados consolidada e limpa, conseguimos identificar padrões de inadimplência e perfis de clientes que podem ajudar na tomada de decisões de crédito mais informadas.
 
-
+---

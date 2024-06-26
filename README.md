@@ -167,6 +167,34 @@ ORDER BY
 
 Esta análise nos permitiu segmentar os clientes em grupos específicos e entender melhor o comportamento financeiro de cada grupo.
 
+##### 4.2 **Análise de Risco Relativo**
+
+Realizamos uma análise de risco relativo em relação à variável "inadimplência" para cada grupo de clientes classificados. O risco relativo foi calculado com base na proporção de clientes inadimplentes em cada categoria em comparação com o total de clientes naquela categoria.
+
+```sql
+WITH risco_relativo AS (
+    SELECT
+        classificacao_cliente,
+        COUNT(user_id) AS total_usuarios,
+        SUM(CASE WHEN default_flag = 'inadimplentes' THEN 1 ELSE 0 END) AS total_inadimplentes,
+        COUNT(user_id) - SUM(CASE WHEN default_flag = 'inadimplentes' THEN 1 ELSE 0 END) AS total_adimplentes,
+        SUM(CASE WHEN default_flag = 'inadimplentes' THEN 1 ELSE 0 END) / COUNT(user_id) AS risco_relativo
+    FROM
+        `projeto-3-423920.projeto3.combined_data`
+    GROUP BY
+        classificacao_cliente
+)
+SELECT
+    classificacao_cliente,
+    total_usuarios,
+    total_inadimplentes,
+    total_adimplentes,
+    risco_relativo
+FROM
+    risco_relativo
+ORDER BY
+    classificacao_cliente ASC;
+```
 #### 5. **Visualização dos Dados**
 
 Para facilitar a compreensão dos dados, utilizamos o Looker Studio para criar visualizações interativas. Adicionamos todas as tabelas tratadas e combinadas para gerar gráficos e dashboards que mostram os principais insights.
